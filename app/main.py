@@ -1,12 +1,12 @@
 from fastapi import FastAPI, status
 from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
-from random import randrange
 import time, logging
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+from starlette.responses import Response
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 logging.basicConfig(level=logging.DEBUG, filename='app.log', format="%(asctime)s: %(levelname)s: %(message)s")
@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG, filename='app.log', format="%(asctime)s
 
 while True:
     try:
-        conn = psycopg2.connect(host='localhost', port='5432', database='password_manager', user='db_user', password='password', cursor_factory=RealDictCursor)
+        conn = psycopg2.connect(host='localhost', port='5432', database='password_manager', user='postgres', password='postgres', cursor_factory=RealDictCursor)
 
         cursor = conn.cursor()
         logging.info("Successfully connected to the database.")
@@ -28,23 +28,6 @@ while True:
         continue
 
 PassMan = FastAPI()
-
-dataArray = [
-    {"platform": "facebook", "username": "User1", "password": "pass@123", "id": 1},
-    {"platform": "instagram", "username": "User2", "password": "pass@123", "id": 2},
-    {"platform": "snapchat", "username": "User3", "password": "pass@123", "id": 3}
-]
-
-def find_data_in_array(id):
-    for details in dataArray:
-        if details["id"] == id:
-            return details
-
-def find_index(id):
-    for i, p in enumerate(dataArray):
-        if p["id"] == id:
-            return i
-
 
 class Data (BaseModel):
     platform: str
@@ -62,39 +45,54 @@ def default():
 
 @PassMan.post("/apigw/accounts", status_code=HTTP_201_CREATED)
 def add_account_details(data: Data):
-    data_dict = data.dict()
-    data_dict['id'] = randrange(0, 1000)
-    dataArray.append(data_dict)
-    return {"New Details Added": data_dict}
+
+    cursor.execute(""" INSERT INTO account_details (platform_name, username, password) VALUES (%s, %s, %s) RETURNING * """, (data.platform, data.username, data.password))
+    conn.commit()
+
+    return {"New Details Added": cursor.fetchone() }
 
 @PassMan.put("/apigw/accounts/{id}")
 def update_account_details(id: int, data: Data):
-    index = find_index(id)
-    if index == None:
+
+    cursor.execute(""" UPDATE account_details SET platform_name = %s, username = %s, password = %s WHERE id = %s RETURNING * """, (data.platform, data.username, data.password, str(id)))
+
+    updated_data = cursor.fetchone()
+
+    if updated_data == None:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
-    
-    updated_data = data.dict()
-    updated_data['id'] = id
-    dataArray[index] = updated_data
+
+    conn.commit()
+
     return {"Details Updated": updated_data}
 
 
 @PassMan.get("/apigw/accounts")
 def get_account_details():
-    return { "data": dataArray }
+
+    cursor.execute(""" SELECT * FROM account_details """)
+    return { "data": cursor.fetchall() }
+
 
 @PassMan.get("/apigw/accounts/{id}")
 def get_by_id(id: int):
-    data = find_data_in_array(id)
+
+    cursor.execute(""" SELECT * FROM account_details WHERE id = %s""", (str(id),) )
+    data = cursor.fetchone()
+    
     if not data: 
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
-    return {"Requested Data": data}
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
+    
+    return { "Requested Data": data }
 
 @PassMan.delete("/apigw/accounts/{id}", status_code=HTTP_204_NO_CONTENT)
 def delete_account_data(id: int):
-    deleted_data = find_data_in_array(id)
-    if not deleted_data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
-    dataArray.remove(deleted_data)
-    return {"Deleted Successfully": deleted_data}
+    
+    cursor.execute(""" DELETE FROM account_details WHERE id = (%s) RETURNING * """, (str(id),) )
+    deleted_data = cursor.fetchone()
+    
+    if not deleted_data: 
+         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
 
+    conn.commit()
+
+    return Response(status_code=HTTP_204_NO_CONTENT)
