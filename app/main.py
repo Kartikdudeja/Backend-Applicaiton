@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, Depends
 from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
 import time, logging
@@ -9,8 +9,23 @@ from psycopg2.extras import RealDictCursor
 from starlette.responses import Response
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
+import uvicorn
+
+from sqlalchemy.orm import Session
+from . import models
+from .database import engine, SessionLocal
+
 logging.basicConfig(level=logging.DEBUG, filename='app.log', format="%(asctime)s: %(levelname)s: %(message)s")
 # log levels: critical; error; warning; info; debug
+
+models.Base.metadata.create_all(bind=engine)
+
+def get_db():
+    db = SessionLocal
+    try:   
+        yield db
+    finally:
+        db.close_all()
 
 while True:
     try:
@@ -40,8 +55,12 @@ def default():
     return {"Message": "Server is up and running..."}
 
 @PassMan.get("/apigw")
-def default():
+def apigw():
     return {"Message": "API Gateway is running..."}
+
+@PassMan.get("/test")
+def testing_function(db: Session = Depends(get_db)):
+    return {"status": "success"}
 
 @PassMan.post("/apigw/accounts", status_code=HTTP_201_CREATED)
 def add_account_details(data: Data):
@@ -93,6 +112,12 @@ def delete_account_data(id: int):
     if not deleted_data: 
          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
 
+
     conn.commit()
 
     return Response(status_code=HTTP_204_NO_CONTENT)
+
+if __name__ == '__main__':
+
+    uvicorn.run(PassMan, host='0.0.0.0', port=8000, debug=True, reload=False, log_level="info", access_log=True)
+    
