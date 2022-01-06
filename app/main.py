@@ -1,3 +1,4 @@
+from os import sync
 from fastapi import FastAPI, status, Depends
 from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
@@ -5,6 +6,7 @@ import time, logging
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from sqlalchemy.sql.functions import mode
 
 from starlette.responses import Response
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
@@ -13,34 +15,12 @@ import uvicorn
 
 from sqlalchemy.orm import Session
 from . import models
-from .database import engine, SessionLocal
+from .database import engine, get_db
 
 logging.basicConfig(level=logging.DEBUG, filename='app.log', format="%(asctime)s: %(levelname)s: %(message)s")
 # log levels: critical; error; warning; info; debug
 
 models.Base.metadata.create_all(bind=engine)
-
-def get_db():
-    db = SessionLocal
-    try:   
-        yield db
-    finally:
-        db.close_all()
-
-while True:
-    try:
-        conn = psycopg2.connect(host='localhost', port='5432', database='password_manager', user='postgres', password='postgres', cursor_factory=RealDictCursor)
-
-        cursor = conn.cursor()
-        logging.info("Successfully connected to the database.")
-        break
-
-    except Exception as error:
-        logging.critical("Failed to connect to the database.")
-        logging.exception(error)
-        time.sleep(2)
-        # To-Do: Implement exponential backoff retry mechanism
-        continue
 
 PassMan = FastAPI()
 
@@ -49,72 +29,64 @@ class Data (BaseModel):
     username: str
     password: str
 
-
 @PassMan.get("/")
 def default():
     return {"Message": "Server is up and running..."}
 
-@PassMan.get("/apigw")
-def apigw():
-    return {"Message": "API Gateway is running..."}
-
-@PassMan.get("/test")
-def testing_function(db: Session = Depends(get_db)):
-    return {"status": "success"}
-
 @PassMan.post("/apigw/accounts", status_code=HTTP_201_CREATED)
-def add_account_details(data: Data):
+def add_account_details(data: Data, db: Session = Depends(get_db)):
 
-    cursor.execute(""" INSERT INTO account_details (platform_name, username, password) VALUES (%s, %s, %s) RETURNING * """, (data.platform, data.username, data.password))
-    conn.commit()
+    new_account = models.Accounts(**data.dict())
 
-    return {"New Details Added": cursor.fetchone() }
+    db.add(new_account)
+    db.commit()
+    db.refresh(new_account)
 
-@PassMan.put("/apigw/accounts/{id}")
-def update_account_details(id: int, data: Data):
-
-    cursor.execute(""" UPDATE account_details SET platform_name = %s, username = %s, password = %s WHERE id = %s RETURNING * """, (data.platform, data.username, data.password, str(id)))
-
-    updated_data = cursor.fetchone()
-
-    if updated_data == None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
-
-    conn.commit()
-
-    return {"Details Updated": updated_data}
-
+    return {"New Details Added": new_account }
 
 @PassMan.get("/apigw/accounts")
-def get_account_details():
+def get_account_details(db: Session = Depends(get_db)):
 
-    cursor.execute(""" SELECT * FROM account_details """)
-    return { "data": cursor.fetchall() }
+    accounts = db.query(models.Accounts).all()
 
+    return { "data": accounts }
 
 @PassMan.get("/apigw/accounts/{id}")
-def get_by_id(id: int):
+def get_by_id(id: int, db: Session = Depends(get_db)):
 
-    cursor.execute(""" SELECT * FROM account_details WHERE id = %s""", (str(id),) )
-    data = cursor.fetchone()
+    account = db.query(models.Accounts).filter(models.Accounts.id == id).first()
+
+    if not account: 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
+
+    return { "Requested Data": account }
+
+@PassMan.put("/apigw/accounts/{id}")
+def update_account_details(id: int, data: Data, db: Session = Depends(get_db)):
     
-    if not data: 
-         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
-    
-    return { "Requested Data": data }
+    account_query = db.query(models.Accounts).filter(models.Accounts.id == id)
+    account = account_query.first()
+
+    if account == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
+
+    account_query.update(data.dict(), synchronize_session=False)
+    db.commit()
+
+    return {"Updated Details": account_query.first() }
+
 
 @PassMan.delete("/apigw/accounts/{id}", status_code=HTTP_204_NO_CONTENT)
-def delete_account_data(id: int):
+def delete_account_data(id: int, db: Session = Depends(get_db)):
     
-    cursor.execute(""" DELETE FROM account_details WHERE id = (%s) RETURNING * """, (str(id),) )
-    deleted_data = cursor.fetchone()
-    
-    if not deleted_data: 
+    account = db.query(models.Accounts).filter(models.Accounts.id == id)
+
+    if account.first() == None: 
          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
 
-
-    conn.commit()
-
+    account.delete(synchronize_session=False)
+    db.commit()
+    
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 if __name__ == '__main__':
