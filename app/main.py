@@ -1,20 +1,13 @@
-from os import sync
+from typing import List
 from fastapi import FastAPI, status, Depends
 from fastapi.exceptions import HTTPException
-from pydantic import BaseModel
-import time, logging
-
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from sqlalchemy.sql.functions import mode
+import uvicorn, logging
 
 from starlette.responses import Response
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
-import uvicorn
-
 from sqlalchemy.orm import Session
-from . import models
+from . import models, schemas
 from .database import engine, get_db
 
 logging.basicConfig(level=logging.DEBUG, filename='app.log', format="%(asctime)s: %(levelname)s: %(message)s")
@@ -24,17 +17,12 @@ models.Base.metadata.create_all(bind=engine)
 
 PassMan = FastAPI()
 
-class Data (BaseModel):
-    platform: str
-    username: str
-    password: str
-
 @PassMan.get("/")
 def default():
     return {"Message": "Server is up and running..."}
 
-@PassMan.post("/apigw/accounts", status_code=HTTP_201_CREATED)
-def add_account_details(data: Data, db: Session = Depends(get_db)):
+@PassMan.post("/apigw/accounts", status_code=HTTP_201_CREATED, response_model=schemas.AccountResponse)
+def add_account_details(data: schemas.CreateAccount, db: Session = Depends(get_db)):
 
     new_account = models.Accounts(**data.dict())
 
@@ -42,16 +30,15 @@ def add_account_details(data: Data, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_account)
 
-    return {"New Details Added": new_account }
+    return new_account
 
-@PassMan.get("/apigw/accounts")
+@PassMan.get("/apigw/accounts", response_model=List[schemas.AccountResponse]) 
 def get_account_details(db: Session = Depends(get_db)):
 
     accounts = db.query(models.Accounts).all()
+    return accounts
 
-    return { "data": accounts }
-
-@PassMan.get("/apigw/accounts/{id}")
+@PassMan.get("/apigw/accounts/{id}", response_model=schemas.AccountResponse)
 def get_by_id(id: int, db: Session = Depends(get_db)):
 
     account = db.query(models.Accounts).filter(models.Accounts.id == id).first()
@@ -59,10 +46,10 @@ def get_by_id(id: int, db: Session = Depends(get_db)):
     if not account: 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
 
-    return { "Requested Data": account }
+    return account
 
 @PassMan.put("/apigw/accounts/{id}")
-def update_account_details(id: int, data: Data, db: Session = Depends(get_db)):
+def update_account_details(id: int, data: schemas.UpdateAccount, db: Session = Depends(get_db)):
     
     account_query = db.query(models.Accounts).filter(models.Accounts.id == id)
     account = account_query.first()
@@ -73,7 +60,7 @@ def update_account_details(id: int, data: Data, db: Session = Depends(get_db)):
     account_query.update(data.dict(), synchronize_session=False)
     db.commit()
 
-    return {"Updated Details": account_query.first() }
+    return {"status": "Password Updated Successfully"}
 
 
 @PassMan.delete("/apigw/accounts/{id}", status_code=HTTP_204_NO_CONTENT)
