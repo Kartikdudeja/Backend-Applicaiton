@@ -3,8 +3,8 @@ import uvicorn, logging
 
 from . import models
 from .database import engine
-
 from .routers import accounts, login, users
+from .config import environment_variable
 
 logging.basicConfig(level=logging.DEBUG, filename='app.log', format="%(asctime)s: %(levelname)s: %(message)s")
 # log levels: critical; error; warning; info; debug

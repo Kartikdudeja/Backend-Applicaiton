@@ -1,32 +1,7 @@
 from datetime import datetime
-from typing import Optional
 from pydantic import BaseModel
 from pydantic.main import Extra
 from pydantic.networks import EmailStr
-
-class AccoutData (BaseModel):
-    platform: str
-    username: str
-    password: str
-
-    class Config:
-        orm_mode = True
-        extra = Extra.forbid 
-
-class CreateAccount (AccoutData):
-    pass
-
-class UpdateAccount (BaseModel, extra=Extra.forbid):
-    password: str
-
-class AccountResponse (BaseModel):
-    id: int
-    platform: str
-    username: str
-    created_at: datetime
-    
-    class Config:
-        orm_mode = True
 
 class CreateUser(BaseModel, extra=Extra.forbid):
     email: EmailStr
@@ -50,5 +25,31 @@ class Token(BaseModel):
     expires_in: int
 
 class TokenData(BaseModel):
-    id: Optional [str] = None
-    email: Optional [str] = None
+    id: str = None
+    email: str = None
+
+class AccoutData (BaseModel):
+    platform: str
+    username: str
+    password: str
+
+    class Config:
+        orm_mode = True
+        extra = Extra.forbid 
+
+class CreateAccount (AccoutData):
+    pass
+
+class UpdateAccount (BaseModel, extra=Extra.forbid):
+    password: str
+
+class AccountResponse (BaseModel):
+    id: int
+    owner_id: int
+    owner: UserOut
+    platform: str
+    username: str
+    created_at: datetime
+    
+    class Config:
+        orm_mode = True
