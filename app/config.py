@@ -12,6 +12,8 @@ class EnvironmentVariable(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTE: int
 
+    CIPHER_KEY: str
+
     class Config:
         env_file = ".env"
 

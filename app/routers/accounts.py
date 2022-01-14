@@ -2,12 +2,12 @@ from fastapi import FastAPI, status, Depends, APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.routing import APIRoute
 from starlette.responses import Response
-from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_406_NOT_ACCEPTABLE, HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_422_UNPROCESSABLE_ENTITY
 
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
-from .. import models, schemas, oauth2
+from .. import models, schemas, oauth2, utils
 from ..database import get_db
 
 router = APIRouter(
@@ -16,7 +16,11 @@ router = APIRouter(
 
 @router.post("/", status_code=HTTP_201_CREATED, response_model=schemas.AccountResponse)
 def add_account_details(data: schemas.CreateAccount, db: Session = Depends(get_db), logged_in: str = Depends(oauth2.get_current_user)):
-
+    
+    # Encypt  Password before storing in Database
+    encypted_pw = utils.encrypt_password(data.password)
+    data.password = encypted_pw
+    
     new_account = models.Accounts(**data.dict(), owner_id=logged_in.id)
 
     db.add(new_account)
@@ -26,7 +30,7 @@ def add_account_details(data: schemas.CreateAccount, db: Session = Depends(get_d
     return new_account
 
 @router.get("/", response_model=List[schemas.AccountResponse])
-def get_all_account_details(db: Session = Depends(get_db), logged_in: str = Depends(oauth2.get_current_user), search: Optional[str] = "", limit: int = 2, offset: int = 0):
+def get_all_account_details(db: Session = Depends(get_db), logged_in: str = Depends(oauth2.get_current_user), search: Optional[str] = "", limit: int = 10, offset: int = 0):
     
     if limit > 10:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="You cannot request more than 10 items")

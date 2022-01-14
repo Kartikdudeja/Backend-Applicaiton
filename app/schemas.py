@@ -53,3 +53,11 @@ class AccountResponse (BaseModel):
     
     class Config:
         orm_mode = True
+
+class PasswordOut(BaseModel):
+    platform: str
+    username: str
+    password: str
+
+    class Config:
+        orm_mode = True
