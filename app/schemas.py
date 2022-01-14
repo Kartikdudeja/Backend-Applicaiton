@@ -45,8 +45,8 @@ class UpdateAccount (BaseModel, extra=Extra.forbid):
 
 class AccountResponse (BaseModel):
     id: int
-    owner_id: int
-    owner: UserOut
+    #owner_id: int
+    #owner: UserOut
     platform: str
     username: str
     created_at: datetime

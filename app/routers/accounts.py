@@ -1,6 +1,5 @@
-from fastapi import FastAPI, status, Depends, APIRouter
+from fastapi import status, Depends, APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.routing import APIRoute
 from starlette.responses import Response
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -45,7 +44,7 @@ def get_by_id(id: int, db: Session = Depends(get_db), logged_in: str = Depends(o
 
     account_query = db.query(models.Accounts).filter(models.Accounts.id == id)
     account = account_query.first()
-
+        
     if not account: 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
 

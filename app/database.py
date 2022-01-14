@@ -2,6 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+import redis
+
 from .config import environment_variable
 
 # SQLALCHEMY_DATABASE_URL = "postgresql://<username>:<password>@<ip-address/hostname>/<database-name>"
@@ -20,3 +22,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
+#redis_client = redis.Redis(host=environment_variable.REDIS_HOSTNAME, port=environment_variable.REDIS_PORT, db=environment_variable.REDIS_PORT)
