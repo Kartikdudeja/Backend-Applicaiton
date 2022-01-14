@@ -23,6 +23,4 @@ def get_db():
     finally:
         db.close()
 
-
-redis_client = redis.Redis(host='localhost', port=6379, db=0)
-#redis_client = redis.Redis(host=environment_variable.REDIS_HOSTNAME, port=environment_variable.REDIS_PORT, db=environment_variable.REDIS_PORT)
+redis_client = redis.Redis(host=environment_variable.REDIS_HOSTNAME, port=environment_variable.REDIS_PORT, db=environment_variable.REDIS_DATABASE)

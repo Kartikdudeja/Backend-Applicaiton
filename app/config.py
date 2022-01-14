@@ -14,6 +14,12 @@ class EnvironmentVariable(BaseSettings):
 
     CIPHER_KEY: str
 
+    REDIS_HOSTNAME: str
+    REDIS_DATABASE: str
+    REDIS_PORT: str
+    REDIS_KEY_EXPIRE_MINUTE: int
+
+
     class Config:
         env_file = ".env"
 

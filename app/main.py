@@ -4,7 +4,7 @@ import uvicorn, logging
 
 from . import models
 from .database import engine
-from .routers import accounts, login, users, password
+from .routers import accounts, login, users, password, data
 
 logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', format="%(asctime)s: %(levelname)s: %(message)s")
 # log levels: critical; error; warning; info; debug
@@ -34,6 +34,7 @@ PassMan.include_router(accounts.router)
 PassMan.include_router(users.router)
 PassMan.include_router(login.router)
 PassMan.include_router(password.router)
+PassMan.include_router(data.router)
 
 @PassMan.get("/")
 def default():
@@ -42,7 +43,6 @@ def default():
 def main():
     
     uvicorn.run(PassMan, host='0.0.0.0', port=8000, debug=True, reload=False, log_level="info", access_log=True)
-
 
 if __name__ == '__main__':
 

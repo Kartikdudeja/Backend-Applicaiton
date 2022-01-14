@@ -61,3 +61,11 @@ class PasswordOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+class DataOut(BaseModel):
+    
+    email: EmailStr
+
+    class Config:
+        orm_mode = True
+        extra = Extra.forbid
