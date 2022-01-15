@@ -1,6 +1,5 @@
 from pydantic import BaseSettings
 
-
 class EnvironmentVariable(BaseSettings):
     DATABASE_HOSTNAME: str
     DATABASE_PORT: str

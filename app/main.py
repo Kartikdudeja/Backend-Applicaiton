@@ -2,14 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn, logging
 
-from . import models
-from .database import engine
-from .routers import accounts, login, users, password, data
+from app import models
+from app.database import engine
+from app.routers import accounts, login, users, password, data
 
-logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', format="%(asctime)s: %(levelname)s: %(message)s")
+logging.basicConfig(level=logging.INFO, filename='app.log', format="%(asctime)s: %(levelname)s: [%(process)d:%(processName)s] (%(filename)s-%(module)s.%(funcName)s): %(message)s")
 # log levels: critical; error; warning; info; debug
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 # sqlalchemy engine to create database table
 models.Base.metadata.create_all(bind=engine)

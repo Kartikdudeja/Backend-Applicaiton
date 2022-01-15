@@ -6,9 +6,13 @@ from starlette.status import HTTP_404_NOT_FOUND
 
 from datetime import timedelta
 
-from ..database import get_db, redis_client
-from .. import models
-from ..config import environment_variable
+from app.database import get_db, redis_client
+from app import models
+from app.config import environment_variable
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/apigw/data"
@@ -17,11 +21,12 @@ router = APIRouter(
 @router.get("/{id}")
 def get_data_by_id(id: int, db: Session = Depends(get_db)):
     
+    logger.info(f'Get User Name for ID: {id}')
     res_data = redis_client.get(id)
 
     if not res_data:
 
-        print("Cache Miss, Quering Database to Retrieve Data")
+        logger.info("Cache Miss, Quering Database to Retrieve Data")
         data_query = db.query(models.Users).filter(models.Users.id == id)
 
         data = data_query.first()
@@ -29,9 +34,11 @@ def get_data_by_id(id: int, db: Session = Depends(get_db)):
         redis_client.set(id, res_data, timedelta(minutes=environment_variable.REDIS_KEY_EXPIRE_MINUTE))
 
     else:
-       print("Cache Hit")
+       logger.info("Cache Hit")
 
     if not res_data:
+
+        logger.error(f"ID: {id} doesn't exist")
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
 
     return {"mail_id": res_data}
