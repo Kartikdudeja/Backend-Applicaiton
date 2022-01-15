@@ -37,6 +37,7 @@ def get_password_by_search(search: str = "", db: Session = Depends(get_db), logg
     data.password = decypted_pw
 
     # To-Do: Implement a Logic to Retun Multiple Records
+    # map() can be useful
     return data
 
 @router.get("/{id}", response_model=schemas.PasswordOut)

@@ -7,6 +7,8 @@ class EnvironmentVariable(BaseSettings):
     DATABASE_USERNAME: str
     DATABASE_PASSWORD: str
 
+    TEST_DATABASE_NAME: str
+
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTE: int
