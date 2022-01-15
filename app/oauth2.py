@@ -22,7 +22,7 @@ ACCESS_TOKEN_EXPIRE_MINUTE = environment_variable.ACCESS_TOKEN_EXPIRE_MINUTE
 
 def create_access_token(data: dict):
     
-    logger.info(f'Create Access Token Request Received for User ID: {data.id}')
+    logger.info(f'Create Access Token Request Received for User ID: {data}')
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTE)
     to_encode.update({"exp": expire})
@@ -57,7 +57,7 @@ def get_current_user(token: str = Depends(oauth_schema), db: Session = Depends(d
 
     credentials_exception = HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Could not validate Credentials", headers={"WWW-Authenticate": "Bearer"})
 
-    logger.info(f'Checking Logged in User with ID: {token.id}')
+    logger.info(f'Checking Logged in User with Token: {token}')
     token = verify_access_token(token, credentials_exception)
     user_query = db.query(models.Users).filter(models.Users.id == token.id)
     user = user_query.first()

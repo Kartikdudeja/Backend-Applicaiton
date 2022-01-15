@@ -19,8 +19,11 @@ router = APIRouter(
 @router.get("/", response_model=schemas.PasswordOut)
 def get_password_by_search(search: str = "", db: Session = Depends(get_db), logged_in: str = Depends(oauth2.get_current_user)):
 
+    # search: platform 
+    # search: username
+
     logger.info(f'Get Password Request Received from User ID: {logged_in.id} with keyword: {search}')
-    
+
     data_query = db.query(models.Accounts).filter(models.Accounts.owner_id == logged_in.id).filter(or_ (models.Accounts.platform.contains(search), models.Accounts.username.contains(search)))
 
     data = data_query.first()

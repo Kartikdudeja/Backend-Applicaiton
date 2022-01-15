@@ -30,6 +30,12 @@ def get_data_by_id(id: int, db: Session = Depends(get_db)):
         data_query = db.query(models.Users).filter(models.Users.id == id)
 
         data = data_query.first()
+        
+        if not data:
+
+            logger.error(f"ID: {id} doesn't exist")
+            raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
+        
         res_data = data.email
         redis_client.set(id, res_data, timedelta(minutes=environment_variable.REDIS_KEY_EXPIRE_MINUTE))
 

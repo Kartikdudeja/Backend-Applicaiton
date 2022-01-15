@@ -34,6 +34,8 @@ def add_account_details(data: schemas.CreateAccount, db: Session = Depends(get_d
     db.commit()
     db.refresh(new_account)
 
+    logger.info(f'New Details Added for Platform: {new_account.platform} with Username: {new_account.username}')
+
     return new_account
 
 @router.get("/", response_model=List[schemas.AccountResponse])
