@@ -1,3 +1,5 @@
+# configuration file for testing environment
+
 from fastapi.testclient import TestClient
 
 from sqlalchemy import create_engine
@@ -11,30 +13,30 @@ from app.oauth2 import create_access_token
 
 import pytest
 
-"""
-    Testing Database Configuration
-"""
-
+# Testing Database URL
 SQLALCHEMY_DATABASE_URL = f"postgresql://{environment_variable.DATABASE_USERNAME}:{environment_variable.DATABASE_PASSWORD}@{environment_variable.DATABASE_HOSTNAME}:{environment_variable.DATABASE_PORT}/{environment_variable.TEST_DATABASE_NAME}"
 
+# engine for test database
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
+# DB Session
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(scope="function")
 def db_Session():
 
-    #Alembic can also be used to create and destory DB Tables after Test
+    # drop old tables in db and create new tables for each test
     models.Base.metadata.drop_all(bind=engine)
     models.Base.metadata.create_all(bind=engine)
-    
+    #Note: Alembic can also be used to create and destory DB Tables after Test
+
     db = TestingSessionLocal()
     try:   
         yield db
     finally:
         db.close()
 
-
+# pytest.fixture are function which run before the test run
 @pytest.fixture(scope="function")
 def client(db_Session):
 
@@ -44,6 +46,7 @@ def client(db_Session):
         finally:
             db_Session.close()
 
+    # Override the 'get_db' function in application code and use 'override_get_db' function for Testing 
     PassMan.dependency_overrides[get_db] = override_get_db
 
     yield TestClient(PassMan)

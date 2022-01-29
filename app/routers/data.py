@@ -18,17 +18,19 @@ router = APIRouter(
     prefix="/apigw/data"
 )
 
+# endpoint to get user details from user id
 @router.get("/{id}")
 def get_data_by_id(id: int, db: Session = Depends(get_db)):
     
     logger.info(f'Get User Name for ID: {id}')
+    # redis call
     res_data = redis_client.get(id)
 
     if not res_data:
 
         logger.info("Cache Miss, Quering Database to Retrieve Data")
+        # querying database in case details are not found in redis
         data_query = db.query(models.Users).filter(models.Users.id == id)
-
         data = data_query.first()
         
         if not data:
@@ -37,6 +39,7 @@ def get_data_by_id(id: int, db: Session = Depends(get_db)):
             raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
         
         res_data = data.email
+        # push data to redis
         redis_client.set(id, res_data, timedelta(minutes=environment_variable.REDIS_KEY_EXPIRE_MINUTE))
 
     else:

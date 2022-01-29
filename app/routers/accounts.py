@@ -20,6 +20,7 @@ router = APIRouter(
 LIMIT = 10
 OFFSET = 0
 
+# Add new account details
 @router.post("/", status_code=HTTP_201_CREATED, response_model=schemas.AccountResponse)
 def add_account_details(data: schemas.CreateAccount, db: Session = Depends(get_db), logged_in: str = Depends(oauth2.get_current_user)):
 
@@ -30,6 +31,7 @@ def add_account_details(data: schemas.CreateAccount, db: Session = Depends(get_d
     
     new_account = models.Accounts(**data.dict(), owner_id=logged_in.id)
 
+    # Add new account details in the database
     db.add(new_account)
     db.commit()
     db.refresh(new_account)
@@ -38,15 +40,18 @@ def add_account_details(data: schemas.CreateAccount, db: Session = Depends(get_d
 
     return new_account
 
+# get existing account details
 @router.get("/", response_model=List[schemas.AccountResponse])
 def get_all_account_details(db: Session = Depends(get_db), logged_in: str = Depends(oauth2.get_current_user), search: Optional[str] = "", limit: int = LIMIT, offset: int = OFFSET):
     
     logger.info(f'Get All Account Details Request from User ID: {logged_in.id}')
 
+    # Pagination Limit Check
     if limit > 10:
         logger.error(f'Limit Error: Parameter Value ({limit}) is greater than defined Threshold')
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="You cannot request more than 10 items")
 
+    # Query database to retreive data
     accounts_query = db.query(models.Accounts).filter(models.Accounts.owner_id == logged_in.id).filter(models.Accounts.platform.contains(search)).limit(limit).offset(offset)
     
     accounts = accounts_query.all()
@@ -81,7 +86,7 @@ def update_account_details(id: int, data: schemas.UpdateAccount, db: Session = D
     account = account_query.first()
 
     if account == None:
-
+        # if account is not found, raise exception
         logger.error(f"ID: {id} doesn't exist")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
 

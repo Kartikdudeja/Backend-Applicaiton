@@ -1,3 +1,5 @@
+# configuration schema file for Environment variable
+
 from pydantic import BaseSettings
 
 class EnvironmentVariable(BaseSettings):

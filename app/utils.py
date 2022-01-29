@@ -1,3 +1,5 @@
+# this file contains all the utility functions
+
 from passlib.context import CryptContext
 from cryptography.fernet import Fernet
 
@@ -11,14 +13,17 @@ CIPHER_KEY = environment_variable.CIPHER_KEY
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# hash user's password
 def hash_password(password):
     logger.info("hashing function called")
     return pwd_context.hash(password)
 
+# validates hash for user login
 def verify_password(plain_password, hashed_password):
     logger.info("verify hash function called")
     return pwd_context.verify(plain_password, hashed_password)
 
+# encrypt password
 def encrypt_password(plain_password, encryption_key = CIPHER_KEY):
     
     logger.info("encryption function called")
@@ -28,6 +33,7 @@ def encrypt_password(plain_password, encryption_key = CIPHER_KEY):
 
     return str_encrypted_password
 
+# decrypt password
 def decrypt_password(str_encrypted_password, encryption_key = CIPHER_KEY):
     
     logger.info("decryption function called")

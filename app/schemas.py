@@ -1,3 +1,5 @@
+# API Request & Response Model definations
+
 from datetime import datetime
 from pydantic import BaseModel
 from pydantic.main import Extra

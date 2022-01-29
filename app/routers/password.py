@@ -16,10 +16,12 @@ router = APIRouter(
     prefix = "/apigw/password"
 )
 
+# returns username/password based on search query
 @router.get("/", response_model=schemas.PasswordOut)
 def get_password_by_search(search: str = "", db: Session = Depends(get_db), logged_in: str = Depends(oauth2.get_current_user)):
 
-    # search: platform 
+    # To-Do: Implement 2 different endpoints for username search and platform name search
+    # search: platform
     # search: username
 
     logger.info(f'Get Password Request Received from User ID: {logged_in.id} with keyword: {search}')
@@ -32,7 +34,7 @@ def get_password_by_search(search: str = "", db: Session = Depends(get_db), logg
         logger.error(f"No Result found with the keyword: {search}")
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"No Result found with the keyword: {search}")
 
-    # Decrypt Password
+    # Decrypt Password retreived from database
     decypted_pw = utils.decrypt_password(data.password)
     data.password = decypted_pw
 
@@ -40,6 +42,7 @@ def get_password_by_search(search: str = "", db: Session = Depends(get_db), logg
     # map() can be useful
     return data
 
+# returns username/password associated with a specific account id
 @router.get("/{id}", response_model=schemas.PasswordOut)
 def get_password_by_id(id: int, db: Session = Depends(get_db), logged_in: str = Depends(oauth2.get_current_user)):
     
@@ -53,8 +56,7 @@ def get_password_by_id(id: int, db: Session = Depends(get_db), logged_in: str = 
         logger.info(f"ID: {id} doesn't exist")
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=f"ID: {id} doesn't exist")
 
-
-    # Decrypt Password
+    # Decrypt Password retreived from database
     decypted_pw = utils.decrypt_password(data.password)
     data.password = decypted_pw
 
