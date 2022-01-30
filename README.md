@@ -1,6 +1,27 @@
 ## Password Manager
-A Password Manager written in Python using the FastAPI framework.<br/>
+
+###### What is a Password Manager?
+A Password Manager is a software that allows users to store, generate, and manage their passwords for local applications and online services. 
+A Password Manager assists in storing such passwords in an encrypted database.
+
+###### Project Brief
+A Password Manager written in Python using the FastAPI framework.
+
 The exposed RESTful APIs allow Third Party Applications to easily integrate this application and utilize the complete functionalities of the Password manager.
+
+#### Technology Stack
+
+##### *Backend:*
+Language: Python<br/>
+Framework: FastAPI<br/>
+
+##### *Database:*
+Primary Database: Postgres<br/>
+Cache Database: Redis
+
+##### *Deployment:*
+Operating System: Linux<br/>
+Web-Proxy: Nginx
 
 #### Important Modules Used in the Project:
 
@@ -132,6 +153,17 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 ```
+
+###### API Documentation
+One of the Perks of working with FastAPI is Autmatic documentation using Swagger UI.
+Swagger UI lets call and test your API directly from the browser. It presents with Interactive API documentation and exploration web user interfaces.
+
+```
+# Open this  URL in the Browser to access the Documentation
+http://127.0.0.1:8000/docs
+```
+
+![screenshot](https://github.com/Kartikdudeja/Backend-Application/blob/main/Swagger_UI_Documentation.png)
 
 ###### Additional Steps
 
