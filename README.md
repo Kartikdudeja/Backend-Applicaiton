@@ -19,6 +19,9 @@ Framework: FastAPI<br/>
 Primary Database: Postgres<br/>
 Cache Database: Redis
 
+##### *Testing:*
+Pytest and Locust
+
 ##### *Deployment:*
 Operating System: Linux<br/>
 Web-Proxy: Nginx
