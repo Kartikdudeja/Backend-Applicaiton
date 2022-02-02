@@ -9,6 +9,13 @@ A Password Manager written in Python using the FastAPI framework.
 
 The exposed RESTful APIs allow Third Party Applications to easily integrate this application and utilize the complete functionalities of the Password manager.
 
+- JWT Token based Authentication
+- Restful APIs to perform CRUD Operations
+- Caching using Redis
+- Encryption to securily store the credentials
+- Implemented Logging for storing application events for Troubleshooting Purpose
+- Implemented Testing to check the reliability and performance of the software. 
+
 #### Technology Stack
 
 ##### *Backend:*
