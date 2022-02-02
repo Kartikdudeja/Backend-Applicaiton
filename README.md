@@ -12,7 +12,7 @@ The exposed RESTful APIs allow Third Party Applications to easily integrate this
 - JWT Token based Authentication
 - Restful APIs to perform CRUD Operations
 - Caching using Redis
-- Encryption to securily store the credentials
+- Encryption to securely store the credentials
 - Implemented Logging for storing application events for Troubleshooting Purpose
 - Implemented Testing to check the reliability and performance of the software. 
 
